@@ -34,6 +34,8 @@ Json::StyledStreamWriter writer;
 int number_song;
 int played_song;
 std::string filename;
+int current_song;
+int next_random_song;
 /*function... might want it in some class?*/
 int getdir (string dir, vector<string> &files)
 {
@@ -168,21 +170,28 @@ int NextSong(sf::Music& music) {
 	std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_int_distribution<> distr(0, number_song);
-	int next_random_song = distr(eng);
+	next_random_song = distr(eng);
 
 	while ((root[next_random_song]["play"]==1)&&(played_song<=number_song)){
 	next_random_song = distr(eng);
 	}
-	
-	filename = root[next_random_song]["path"].asString();
+	current_song = next_random_song;
+	filename = root[current_song]["path"].asString();
 
 	if (!music.openFromFile(filename)) {
 		std::cout << "check your file path. also only wav, flac, ogg and mp3 are supported." << std::endl;
 		return EXIT_FAILURE;
 	}
 	music.play();
-	root[next_random_song]["play"] = 1;
+	root[current_song]["play"] = 1;
 	played_song++;
+	
+}
+
+void Autoplay(sf::Music& music) {
+
+	if (music.getStatus()!=sf::Music::Status::Playing)
+	NextSong(music);
 	
 }
 
@@ -233,17 +242,14 @@ int main() {
 	sf::Vector2u dimensions;
 
 	// See if we can find the image
-	std::string textureName = getResourcePath(filename, "MP3_file_structure.png");
-	std::ifstream ifile(textureName);
-	if (ifile) {
-		texture.loadFromFile(textureName);
+	
+		texture.loadFromFile("WWDIYJimmyTArt.png");
 		sprite.setTexture(texture);
-		dimensions = texture.getSize();
-	} else {
-		std::cout << "Resource not found" << std::endl;
+	//	dimensions = texture.getSize();
+
 		dimensions.x = 800;
 		dimensions.y = 600;
-	}
+	
 
 	// Create the main window
 	sf::RenderWindow window(sf::VideoMode(dimensions.x, dimensions.y), "SFML window");
@@ -256,9 +262,9 @@ int main() {
 	{
 		// Process events
 		sf::Event event;
-		
+		Autoplay(music);
 		sf::Time elapsed = music.getPlayingOffset();
-		std::cout << "song time. " << song_lenght.asSeconds() << "remaining time :  " << elapsed.asSeconds() << std::endl;
+		//std::cout << "song time. " << song_lenght.asSeconds() << "remaining time :  " << elapsed.asSeconds() << std::endl;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
 				window.close();
@@ -275,7 +281,7 @@ int main() {
 						if (!NextSong(music)) {
 		std::cout << "check your file path. also only wav, flac, ogg and mp3 are supported." << std::endl;
 		return EXIT_FAILURE;
-	}
+					}
 						break;
 					default:
 						break;
@@ -286,6 +292,40 @@ int main() {
 		window.clear();
 		// Draw the sprite
 		window.draw(sprite);
+		sf::Font font;
+		font.loadFromFile("Haarlem Deco.ttf");
+		sf::Text Title;
+		sf::Text Artist;
+		sf::Text CurrentText;
+		sf::String CurrentSongText = root[current_song]["Song Name"].asString();
+		sf::String CurrentArtistText = root[current_song]["artist"].asString();
+
+
+		Artist.setFont(font);
+		Artist.setString(CurrentArtistText);
+		Artist.setColor(sf::Color::White);
+		Artist.setPosition(400.0f, 70.0f);
+		Artist.setCharacterSize(24);
+		Artist.setStyle(sf::Text::Bold);
+
+		Title.setFont(font);
+		Title.setString(CurrentSongText);
+		Title.setColor(sf::Color::White);
+		Title.setPosition(400.0f, 90.0f);
+		Title.setCharacterSize(24);
+		Title.setStyle(sf::Text::Bold);
+		
+		CurrentText.setFont(font);
+		CurrentText.setString("Current playing song");
+		CurrentText.setColor(sf::Color::Red);
+		CurrentText.setPosition(400.0f, 45.0f);
+		CurrentText.setCharacterSize(26);
+		CurrentText.setStyle(sf::Text::Bold | sf::Text::Underlined);
+
+		window.draw(Artist);
+		window.draw(Title);
+		window.draw(CurrentText);
+
 		// Update the window
 		window.display();
 	}
