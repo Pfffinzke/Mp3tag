@@ -25,7 +25,7 @@ AUDIOEXE := VinzcPlayer
 $(AUDIOEXE): Main.o
 	$(CC) $(CFLAGS) $< -o $@ SoundFileReaderMp3.o $(LIBS)
 
-Main.o: mp3reader.cpp SoundFileReaderMp3.o
+Main.o: mp3reader.cpp mp3reader.hpp SoundFileReaderMp3.o
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 SoundFileReaderMp3.o: SoundFileReaderMp3.cpp SoundFileReaderMp3.hpp
