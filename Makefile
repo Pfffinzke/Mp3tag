@@ -1,7 +1,35 @@
-all:mp3reader
 
-mp3reader: mp3reader.o
-	g++ -Wall -g -o mp3reader mp3reader.o -lid3 -ljsoncpp
+CC=g++
+CFLAGS=-std=c++11 -g -O0
 
-mp3reader.o: mp3reader.cpp 
-	g++ -Wall -g -c mp3reader.cpp -lid3 -ljsoncpp
+# IMPORTANT
+# replace <TODO> with your installation directories
+#
+SFML=~/00_perso/dev/SFML
+MPG123=/usr/local
+
+INCLUDESFML=$(SFML)/include
+INCLUDEMPG123=$(MPG123)/include
+
+LIBSFML=$(SFML)/lib
+LIBMPG123=$(MPG123)/lib
+
+INCLUDES := -I$(INCLUDEMPG123) -I$(INCLUDESFML)
+# for non-debug builds
+LIBS     := -L$(LIBMPG123) -lmpg123 -L$(LIBSFML) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lid3 -ljsoncpp
+# for debug builds
+#LIBS     := -L$(LIBMPG123) -lmpg123 -L$(LIBSFML) -lsfml-graphics-d -lsfml-window-d -lsfml-system-d -lsfml-audio-d
+
+AUDIOEXE := VinzcPlayer
+
+$(AUDIOEXE): Main.o
+	$(CC) $(CFLAGS) $< -o $@ SoundFileReaderMp3.o $(LIBS)
+
+Main.o: mp3reader.cpp SoundFileReaderMp3.o
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+SoundFileReaderMp3.o: SoundFileReaderMp3.cpp SoundFileReaderMp3.hpp
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+ 
+clean:
+	rm $(AUDIOEXE) *.o
